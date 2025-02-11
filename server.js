@@ -145,10 +145,19 @@ async function consturctServer(moduleDefs) {
    */
   app.use((req, res, next) => {
     if (req.path !== '/' && !req.path.includes('.')) {
+
+      const reqOrigin = req.headers.origin;
+      let allowOrigin = reqOrigin;
+      
+      if (CORS_ALLOW_ORIGIN) {
+       const allow = String(CORS_ALLOW_ORIGIN).split(",").includes(reqOrigin);
+       allow && (allowOrigin = reqOrigin)
+      }
+
       res.set({
         'Access-Control-Allow-Credentials': true,
         'Access-Control-Allow-Origin':
-          CORS_ALLOW_ORIGIN || req.headers.origin || '*',
+        allowOrigin || '*',
         'Access-Control-Allow-Headers': 'X-Requested-With,Content-Type',
         'Access-Control-Allow-Methods': 'PUT,POST,GET,DELETE,OPTIONS',
         'Content-Type': 'application/json; charset=utf-8',
@@ -162,14 +171,14 @@ async function consturctServer(moduleDefs) {
    */
   app.use((req, _, next) => {
     req.cookies = {}
-    //;(req.headers.cookie || '').split(/\s*;\s*/).forEach((pair) => { //  Polynomial regular expression //
-    ;(req.headers.cookie || '').split(/;\s+|(?<!\s)\s+$/g).forEach((pair) => {
-      let crack = pair.indexOf('=')
-      if (crack < 1 || crack == pair.length - 1) return
-      req.cookies[decode(pair.slice(0, crack)).trim()] = decode(
-        pair.slice(crack + 1),
-      ).trim()
-    })
+      //;(req.headers.cookie || '').split(/\s*;\s*/).forEach((pair) => { //  Polynomial regular expression //
+      ; (req.headers.cookie || '').split(/;\s+|(?<!\s)\s+$/g).forEach((pair) => {
+        let crack = pair.indexOf('=')
+        if (crack < 1 || crack == pair.length - 1) return
+        req.cookies[decode(pair.slice(0, crack)).trim()] = decode(
+          pair.slice(crack + 1),
+        ).trim()
+      })
     next()
   })
 
